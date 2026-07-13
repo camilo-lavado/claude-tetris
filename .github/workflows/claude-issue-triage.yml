@@ -1,0 +1,46 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Triage issue with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Analiza el issue #${{ github.event.issue.number }} de este repositorio (un juego de Tetris en JavaScript vanilla: game.js, index.html, style.css).
+
+            Tu tarea:
+            1. Lee el título y la descripción del issue con `gh issue view ${{ github.event.issue.number }}`.
+            2. Revisa las labels existentes con `gh label list` y asigna las que correspondan usando
+               `gh issue edit ${{ github.event.issue.number }} --add-label "..."`.
+               No crees labels nuevas: usa únicamente las que ya existen en el repositorio.
+               Si el issue tiene labels que ya no aplican, quítalas con `--remove-label`.
+            3. Revisa el código relevante del repositorio para entender el contexto real del problema o la solicitud.
+            4. Publica UN solo comentario en el issue con
+               `gh issue comment ${{ github.event.issue.number }} --body "..."`
+               que contenga un diagnóstico general con:
+               - Resumen del problema/solicitud en 1-2 líneas.
+               - Causa raíz probable (si es un bug) o alcance de la funcionalidad (si es un enhancement).
+               - Archivos/áreas del código probablemente involucrados.
+               - Un enfoque sugerido para la solución, SIN implementar código todavía (esto es solo
+                 diagnóstico para guiar la implementación posterior por el equipo).
+
+            No implementes cambios de código ni abras pull requests. Solo etiqueta el issue y deja el
+            comentario de diagnóstico.
+          claude_args: |
+            --allowed-tools "Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*)"
