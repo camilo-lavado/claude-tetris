@@ -40,6 +40,10 @@ jobs:
                - Un enfoque sugerido para la solución, SIN implementar código todavía (esto es solo
                  diagnóstico para guiar la implementación posterior por el equipo).
 
+               El comentario debe estar escrito en formato Markdown válido y bien interpretable por
+               GitHub (usa encabezados, listas, negritas y bloques de código con backticks cuando
+               corresponda, por ejemplo al referenciar nombres de archivo o fragmentos de código).
+
             No implementes cambios de código ni abras pull requests. Solo etiqueta el issue y deja el
             comentario de diagnóstico.
           claude_args: |
