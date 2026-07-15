@@ -50,6 +50,27 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const powerupLegend = document.getElementById('powerup-legend');
 const restartBtn = document.getElementById('restart-btn');
+const themeToggle = document.getElementById('theme-toggle');
+
+const THEME_STORAGE_KEY = 'tetris-theme';
+
+function applyTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_STORAGE_KEY);
+  applyTheme(saved === 'light' ? 'light' : 'dark');
+}
+
+function toggleTheme() {
+  const newTheme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(newTheme);
+  localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+}
+
+themeToggle.addEventListener('click', toggleTheme);
+initTheme();
 
 powerupLegend.innerHTML = POWERUP_KINDS.map(kind => {
   const info = POWERUP_INFO[kind];
