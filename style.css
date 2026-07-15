@@ -143,6 +143,39 @@ kbd {
   color: #7aa2f7;
 }
 
+.powerup-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  padding: 4px 16px;
+  text-align: left;
+}
+
+.powerup-legend.hidden {
+  display: none;
+}
+
+.powerup-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #999;
+}
+
+.powerup-item .pu-icon {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.powerup-item strong {
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+}
+
 #restart-btn {
   margin-top: 8px;
   background: #7aa2f7;
