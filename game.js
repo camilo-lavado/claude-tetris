@@ -15,6 +15,59 @@ const COLORS = [
   '#ffb74d', // L - orange
 ];
 
+const SKINS = {
+  retro: {
+    colors: COLORS,
+    background: null,
+    gridColor: '#22222e',
+    glow: false,
+    rounded: false,
+    pixelTexture: false,
+  },
+  neon: {
+    colors: [
+      null,
+      '#00e5ff', // I
+      '#ffee00', // O
+      '#e040fb', // T
+      '#00e676', // S
+      '#ff1744', // Z
+      '#2979ff', // J
+      '#ff9100', // L
+    ],
+    background: '#000000',
+    gridColor: 'rgba(0, 255, 255, 0.12)',
+    glow: true,
+    rounded: false,
+    pixelTexture: false,
+  },
+  pastel: {
+    colors: [
+      null,
+      '#a8dadc', // I
+      '#ffe8a3', // O
+      '#d8bfd8', // T
+      '#b5e6b5', // S
+      '#f7b3ab', // Z
+      '#b8c4f0', // J
+      '#f9cfa0', // L
+    ],
+    background: '#faf4f8',
+    gridColor: '#e8dde6',
+    glow: false,
+    rounded: true,
+    pixelTexture: false,
+  },
+  pixel: {
+    colors: COLORS,
+    background: '#1e1e2e',
+    gridColor: '#3a3a4e',
+    glow: false,
+    rounded: false,
+    pixelTexture: true,
+  },
+};
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -51,8 +104,12 @@ const overlayScore = document.getElementById('overlay-score');
 const powerupLegend = document.getElementById('powerup-legend');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 const THEME_STORAGE_KEY = 'tetris-theme';
+const SKIN_STORAGE_KEY = 'tetris-skin';
+
+let activeSkin = 'retro';
 
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
@@ -71,6 +128,28 @@ function toggleTheme() {
 
 themeToggle.addEventListener('click', toggleTheme);
 initTheme();
+
+function applySkin(skin) {
+  activeSkin = SKINS[skin] ? skin : 'retro';
+  if (skinSelect) skinSelect.value = activeSkin;
+}
+
+function initSkin() {
+  const saved = localStorage.getItem(SKIN_STORAGE_KEY);
+  applySkin(saved);
+}
+
+function changeSkin(skin) {
+  applySkin(skin);
+  localStorage.setItem(SKIN_STORAGE_KEY, activeSkin);
+  // Redraw immediately so the change is visible even if the game is paused
+  // and the animation loop isn't currently running.
+  draw();
+  drawNext();
+}
+
+if (skinSelect) skinSelect.addEventListener('change', e => changeSkin(e.target.value));
+initSkin();
 
 powerupLegend.innerHTML = POWERUP_KINDS.map(kind => {
   const info = POWERUP_INFO[kind];
@@ -290,27 +369,79 @@ function showPowerUpBanner(kind) {
   activeMessage = { text: `${info.label} ${info.icon}`, until: performance.now() + 1200 };
 }
 
+function drawRoundedRect(context, x, y, w, h, r) {
+  context.beginPath();
+  if (typeof context.roundRect === 'function') {
+    context.roundRect(x, y, w, h, r);
+  } else {
+    const radius = Math.min(r, w / 2, h / 2);
+    context.moveTo(x + radius, y);
+    context.arcTo(x + w, y, x + w, y + h, radius);
+    context.arcTo(x + w, y + h, x, y + h, radius);
+    context.arcTo(x, y + h, x, y, radius);
+    context.arcTo(x, y, x + w, y, radius);
+    context.closePath();
+  }
+}
+
+function fillBlockShape(context, x, y, w, h, rounded) {
+  if (rounded) {
+    drawRoundedRect(context, x, y, w, h, Math.max(2, Math.min(w, h) * 0.2));
+    context.fill();
+  } else {
+    context.fillRect(x, y, w, h);
+  }
+}
+
+function drawPixelTexture(context, x, y, w, h) {
+  context.save();
+  context.globalAlpha = 0.22;
+  context.fillStyle = '#000000';
+  const dot = Math.max(2, Math.floor(Math.min(w, h) / 6));
+  let row = 0;
+  for (let py = 0; py < h; py += dot * 2) {
+    const startX = row % 2 === 0 ? 0 : dot;
+    for (let px = startX; px < w; px += dot * 2) {
+      context.fillRect(x + px, y + py, dot, dot);
+    }
+    row++;
+  }
+  context.restore();
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const skin = SKINS[activeSkin];
+  const color = skin.colors[colorIndex];
+  const bx = x * size + 1, by = y * size + 1, bw = size - 2, bh = size - 2;
+  context.save();
   context.globalAlpha = alpha ?? 1;
+  if (skin.glow) {
+    context.shadowColor = color;
+    context.shadowBlur = size * 0.5;
+  }
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  fillBlockShape(context, bx, by, bw, bh, skin.rounded);
+  context.shadowBlur = 0;
   // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  context.fillStyle = skin.glow ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  fillBlockShape(context, bx, by, bw, Math.min(4, bh), skin.rounded);
+  if (skin.pixelTexture) drawPixelTexture(context, bx, by, bw, bh);
+  context.restore();
 }
 
 function drawPowerUpBlock(context, x, y, kind, size, alpha) {
   const info = POWERUP_INFO[kind];
+  const skin = SKINS[activeSkin];
+  const bx = x * size + 1, by = y * size + 1, bw = size - 2, bh = size - 2;
   context.save();
   context.globalAlpha = alpha ?? 1;
   context.shadowColor = info.color;
-  context.shadowBlur = 12;
+  context.shadowBlur = skin.glow ? 20 : 12;
   context.fillStyle = info.color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  fillBlockShape(context, bx, by, bw, bh, skin.rounded);
   context.shadowBlur = 0;
+  if (skin.pixelTexture) drawPixelTexture(context, bx, by, bw, bh);
   context.font = `${size * 0.7}px sans-serif`;
   context.textAlign = 'center';
   context.textBaseline = 'middle';
@@ -319,8 +450,10 @@ function drawPowerUpBlock(context, x, y, kind, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
-  ctx.lineWidth = 0.5;
+  const skin = SKINS[activeSkin];
+  if (!skin.gridColor) return;
+  ctx.strokeStyle = skin.gridColor;
+  ctx.lineWidth = skin.glow ? 1 : 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
     ctx.moveTo(c * BLOCK, 0);
@@ -337,7 +470,12 @@ function drawGrid() {
 
 function draw(ts) {
   const now = ts ?? performance.now();
+  const skin = SKINS[activeSkin];
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (skin.background) {
+    ctx.fillStyle = skin.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   drawGrid();
 
   // board
@@ -401,7 +539,12 @@ function draw(ts) {
 
 function drawNext() {
   const NB = 30;
+  const skin = SKINS[activeSkin];
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  if (skin.background) {
+    nextCtx.fillStyle = skin.background;
+    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+  }
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
