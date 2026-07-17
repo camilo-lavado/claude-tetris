@@ -51,6 +51,14 @@ const overlayScore = document.getElementById('overlay-score');
 const powerupLegend = document.getElementById('powerup-legend');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const toggleControlsBtn = document.getElementById('toggle-controls-btn');
+const pauseControls = document.getElementById('pause-controls');
+const startLevelSelect = document.getElementById('start-level');
+
+let selectedStartLevel = 1;
 
 const THEME_STORAGE_KEY = 'tetris-theme';
 
@@ -427,16 +435,12 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
-    overlay.classList.add('hidden');
-    powerupLegend.classList.add('hidden');
+    pauseMenu.classList.add('hidden');
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    powerupLegend.classList.remove('hidden');
-    overlay.classList.remove('hidden');
+    pauseMenu.classList.remove('hidden');
   }
 }
 
@@ -463,11 +467,11 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = selectedStartLevel;
   paused = false;
   gameOver = false;
   gameOverRow = null;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (selectedStartLevel - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   linesUntilPowerUp = POWERUP_LINE_INTERVAL;
@@ -479,12 +483,13 @@ function init() {
   updateHUD();
   overlay.classList.add('hidden');
   powerupLegend.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -509,5 +514,19 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+resumeBtn.addEventListener('click', () => {
+  if (paused) togglePause();
+});
+
+pauseRestartBtn.addEventListener('click', init);
+
+toggleControlsBtn.addEventListener('click', () => {
+  pauseControls.classList.toggle('hidden');
+});
+
+startLevelSelect.addEventListener('change', e => {
+  selectedStartLevel = parseInt(e.target.value, 10);
+});
 
 init();
