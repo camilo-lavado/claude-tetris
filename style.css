@@ -198,6 +198,7 @@ kbd {
   background: var(--overlay-bg);
   backdrop-filter: blur(4px);
   border-radius: 4px;
+  overflow-y: auto;
 }
 
 .overlay.hidden {
@@ -210,6 +211,8 @@ kbd {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  max-height: 100%;
+  padding: 16px 0;
 }
 
 #overlay-title {
@@ -273,5 +276,156 @@ kbd {
 }
 
 #restart-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* ---- Récords ---- */
+.records {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.highscore-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: hs-rank;
+}
+
+.highscore-list li {
+  counter-increment: hs-rank;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.highscore-list li::before {
+  content: counter(hs-rank) '.';
+  color: var(--label);
+  margin-right: 4px;
+}
+
+.highscore-list .hs-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.highscore-list .hs-score {
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.highscore-list .hs-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.highscore-list li.is-new-record {
+  background: rgba(122, 162, 247, 0.15);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.highscore-list li.is-new-record .hs-name,
+.highscore-list li.is-new-record .hs-score {
+  color: var(--accent);
+}
+
+.records-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.records-stats strong {
+  color: var(--text);
+}
+
+.reset-btn {
+  margin-top: 4px;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.reset-btn:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.overlay-records {
+  width: 100%;
+  max-width: 260px;
+}
+
+.highscore-entry {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.highscore-entry.hidden {
+  display: none;
+}
+
+.highscore-entry-label {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.highscore-entry-row {
+  display: flex;
+  gap: 8px;
+}
+
+#player-name-input {
+  flex: 1;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+#player-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#save-score-btn {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#save-score-btn:hover {
   background: var(--accent-hover);
 }
